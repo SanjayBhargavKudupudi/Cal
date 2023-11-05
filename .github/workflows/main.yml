@@ -5,19 +5,33 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Display structure of checked out code
-      run: ls -R
-
-    # Add additional steps for build and test here if needed
-
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+    - name: Set up Node
+      uses: actions/setup-node@v1
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build
+      run: npm run build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Deploy to Server
+      run: |
+        scp -r * username@yourserver.com:/path/to/your/webroot
+      env:
+        DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
